@@ -1,0 +1,47 @@
+{
+   "BeingVerbs":["be","being","been","am","is","are","was","were"]
+  ,"AuxiliaryVerbs":[
+     "will","would","won't"
+    ,"can","could","cannot","can't"
+    ,"shall","should","shan't"
+    ,"may","might"
+  ],"Pronouns":[
+     "I","my","me","mine"
+    ,"you","your","you","yours"
+    ,"we","our","us","ours"
+    ,"he","his","him","his"
+    ,"she","her","her","hers"
+    ,"they","their","them","theirs"
+    ,"it","its","it","its"
+  ],"Conjunctions":[
+     "for","and","nor","but","or","yet","so","after","as","as long as","as soon as"
+    ,"As though","Before","Even if","If","If when","Inasmuch","Just as","Now"
+    ,"Now that","Once","Provided that","Since","Supposing","That","Though","Until"
+    ,"Whenever","Whereas","Wherever","Which","Who","Although","As if","As much as"
+    ,"Because","Even","Even though","If only","If then","In order that","Lest"
+    ,"Now since","Now when","Provided","Rather than","So that","Both","Either"
+    ,"Hardly","Neither","No sooner","than","Not only","but also","After all"
+    ,"As a result","Consequently","Finally","For example","Furthermore","Hence"
+    ,"However","In addition","In fact","Incidentally","Indeed","Instead","Likewise"
+    ,"Meanwhile"
+  ],"Prepositions":[
+     "about","below","excepting","off","toward","above","beneath","for","on"
+    ,"under","across","besides?","from","onto","underneath","after","between"
+    ,"in","out","until","against","beyond","in front of","outside","up","along"
+    ,"but","inside","over","upon","among","by","in spite of","past","up to"
+    ,"around","concerning","instead of","regarding","with","at","despite","into"
+    ,"since","within","because of","down","like","through","without","before"
+    ,"during","near","throughout","with regard to","behind","except","of","to"
+    ,"with respect to"
+  ],"WsHs":[
+     "what","whatever","which","whichever"
+    ,"where","wherefore","wherever"
+    ,"when","whence","whenever"
+    ,"who","whose","whom","whomever"
+    ,"whether","how"
+  ],"IndefiniteFrequency":[
+     "always","constantly","usually","normally","frequently","regularly"
+     ,"often","sometimes","occasionally","rarely","infrequently","seldom"
+     ,"hardly ever","never"
+  ]
+}
