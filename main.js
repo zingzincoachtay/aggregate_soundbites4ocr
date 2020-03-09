@@ -32,7 +32,7 @@ const constructRegExp = function(w){
   var rW = '';
   var sep = ' '; var union = '';
   w.forEach((item, i) => {
-    rW += union+sep+item+sep;
+    rW += union+sep+item+'\\b|\\b'+item+sep;
     union = '|';
   });
   //console.log(rW);
@@ -42,12 +42,12 @@ const defineRegExp = (r) => new RegExp(r,'gi');
 const cleanBuffer = function(s){
   var m = s.subbuffer; let re = [];
   var d = JSON.parse( fs.readFileSync(s.dictTR) );
-  re.push( / a | an | the /gi );
-  re.push( /\bi\.?e\.?\b|\be\.?g\.?\b|\betc\.?\b|\ba\.?k\.?a\.?\b/gi );
-  re.push( /(s)['’]/gi );
-  re.push( /['’](s|re|ll|ve|nt)/gi );
-  re.push( /\b,|\.|[\(\{\[]|[\)\}\]]|\–\s|\s\–|\/\s|\s\/|\*\s/gi );
+  re.push( / i\.?e\.?\b|\bi\.?e\.? | e\.?g\.?\b|\be\.?g\.? | etc\.?\b|\betc\.? | a\.?k\.?a\.?\b|\ba\.?k\.?a\.? /gi );
+  re.push( /s['’] /gi , /['’](s|re|ll|ve) |n['’]t /gi );
+  //re.push( /,|\.|;|[\(\{\[\)\}\]]|\– | \–|\/ | \/|\* /gi );
   // whole word exclusions
+  re.push( constructRegExp(d.Articles) );
+  re.push( constructRegExp(d.BasicResponse) );
   re.push( constructRegExp(d.BeingVerbs) );
   re.push( constructRegExp(d.AuxiliaryVerbs) );
   re.push( constructRegExp(d.Pronouns) );
@@ -60,6 +60,7 @@ const cleanBuffer = function(s){
   re.forEach((item, i) => {
     m = cleanExclude(item,m);
   });
+  //console.log(m);
   return m;
 }
 const cleanExclude = (re,t) => t.replace(re,' ');
@@ -114,14 +115,19 @@ const aggregateCombination = function(l){
   re.push( /(\d+\s*\%)/g );
   // proper nouns, first
   re.push( /([A-Z]+\w*( +[A-Z]+\w*)*)\b/g );  //console.log( m.match(re[1]) );
-  re.push( /\w+\b/g );
   re.forEach((item, i) => {
     let lList = l.match(item);
     if( lList !== null ){
-      wo = wo.concat( lList );
+      wo = wo.concat(lList);
       l = cleanExclude(item,l);
     }
   });
+  let reV = /(\w+)\b/g;
+  let v = l.match(reV);
+  if( v !== null ){
+    wo = wo.concat(v);
+    l = cleanExclude(reV,l);
+  }
   return {
     subline:l, //STR
     phrases:wo //LIST
@@ -131,18 +137,32 @@ const countItems = function(s){
   let d = s.dictKW; let hash = {};
   // First, go through all the non-trivial vocabs for similar/typo words
   //   i.e., L(w1,w2)=1
+  var keys = Object.keys(d);
+  keys.forEach((item, i) => {
+    var value = d[item];
+    var uniqueWords = Object.keys(value);
+    uniqueWords.forEach((w1, i) => {
+      uniqueWords.forEach((w2, i) => {
+        //let q = typo.levenshteinDistance(w1,w2);
+      });
+    });
+    //console.log(uniqueWords.sort());
+  });
   // Counts of similar/typo words combine, simplify the Dict
-  // ...more
-  for (var i in d) {
-    // mapping moved earlier, so do count and more here
-    hash = append(hash,i,{});
-    let dict = d[i];
-    hash[i] = map(hash[i],dict);
+
+
+  // Rank by counts
+  keys.forEach((item, i) => {
+    var value = d[item];
+    var uniqueWords = Object.keys(value);
+    uniqueWords.forEach((w, i) => {
+    });
   }
   return hash;
 }
 
 var soundbites = new Keywords([0,1,2,3]);
+var typo = require('./levenshtein');
 var fs = require('fs');
 var raw = process.argv[2]; if(!raw){ raw = soundbites.rawJD;}
 
@@ -150,11 +170,11 @@ fs.readFile(raw , function(err,buffer) {
   if(err){ throw err;}
   //console.log(buffer.toString());
   soundbites.buffer = buffer.toString();
-  soundbites.subbuffer = cleanBuffer(soundbites);
-  //let rawDict = aggregateBuffer(soundbites); console.log(rawDict);
-  soundbites.dictKW = aggregateBuffer(soundbites); console.log(soundbites.dictKW);
-  // map dict of list to dict
-  //console.log( countItems(soundbites) );
+  soundbites.subbuffer = cleanBuffer(soundbites);//uses subbuffer
+  //console.log(soundbites.subbuffer);
+  soundbites.dictKW = aggregateBuffer(soundbites);//uses dictKW
+  console.log(soundbites.dictKW);
+  //countItems(soundbites);
 });
 
 // To exclude: whole words

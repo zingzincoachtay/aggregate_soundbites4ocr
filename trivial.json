@@ -1,5 +1,7 @@
 {
-   "BeingVerbs":["be","being","been","am","is","are","was","were"]
+   "Articles":["a","an","the"]
+  ,"BasicResponse":["yes","no"]
+  ,"BeingVerbs":["be","being","been","am","is","are","was","were"]
   ,"AuxiliaryVerbs":[
      "will","would","won't"
     ,"can","could","cannot","can't"
@@ -15,16 +17,16 @@
     ,"they","their","them","theirs"
     ,"it","its","it","its"
   ],"Conjunctions":[
-     "for","and","nor","but","or","yet","so","after","as","as long as","as soon as"
-    ,"As though","Before","Even if","If","If when","Inasmuch","Just as","Now"
-    ,"Now that","Once","Provided that","Since","Supposing","That","Though","Until"
-    ,"Whenever","Whereas","Wherever","Which","Who","Although","As if","As much as"
-    ,"Because","Even","Even though","If only","If then","In order that","Lest"
-    ,"Now since","Now when","Provided","Rather than","So that","Both","Either"
-    ,"Hardly","Neither","No sooner","than","Not only","but also","After all"
-    ,"As a result","Consequently","Finally","For example","Furthermore","Hence"
-    ,"However","In addition","In fact","Incidentally","Indeed","Instead","Likewise"
-    ,"Meanwhile"
+     "for","nor","but","yet","so","after","as","as long as","as soon as"
+    ,"as though","Before","Even if","If","If when","Inasmuch","Just as","Now"
+    ,"now that","Once","Provided that","Since","Supposing","That","Though","Until"
+    ,"whenever","Whereas","Wherever","Which","Who","Although","As if","As much as"
+    ,"because","Even","Even though","If only","If then","In order that","Lest"
+    ,"now since","Now when","Provided","Rather than","So that","Both","Either"
+    ,"hardly","Neither","No sooner","than","Not only","but also","After all"
+    ,"as a result","Consequently","Finally","For example","Furthermore","Hence"
+    ,"however","in addition","in fact","incidentally","indeed","instead","likewise"
+    ,"meanwhile"
   ],"Prepositions":[
      "about","below","excepting","off","toward","above","beneath","for","on"
     ,"under","across","besides?","from","onto","underneath","after","between"
