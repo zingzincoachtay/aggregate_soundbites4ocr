@@ -6,7 +6,7 @@ class Keywords {
     r.forEach((item, i) => {
       this.dictKW[i] = {};
     });
-    // Unneeded, but clarifying
+    // Probably unneeded, but clarifying
     this._buffer = ''; this._subbuffer = '';
   }
   // Static variables
@@ -23,10 +23,12 @@ class Keywords {
   set subbuffer(m){
     this._subbuffer = m;}
   get subbuffer(){  return this._subbuffer;}
+  set listKW(d){
+    this.listKeyWord = d;}
+  get listKW(){  return this.listKeyWord;}
   set dictKW(d){
     this.dictKeyWord = d;}
   get dictKW(){  return this.dictKeyWord;}
-
 }
 const constructRegExp = function(w){
   var rW = '';
@@ -73,18 +75,10 @@ const aggregateBuffer = function(s){
       k = g;
       current = createDictPair(current,k[1],{});
     } else {
-      //get combination proper names
-      //get combination dashed words
-      //get rest of whole words
       let digest = aggregateCombination(line);
       lines[i] = digest.subline;
       let list = digest.phrases;
       current[k[1]] = mapList(current[k[1]],list);
-      //if( current[k[1]] === undefined){
-        //current[k[1]] = digest.phrases;
-      //} else {
-        //current[k[1]] = current[k[1]].concat(digest.phrases);
-      //}
     }
   });
   //console.log( lines.join("\n") );
@@ -106,27 +100,35 @@ const mapList = function(d,l){
   return d;
 }
 const aggregateCombination = function(l){
-  // Need character sensitivity here!!
+  // Need case sensitivity here!!
   let wo = []; let re = [];
-  // whole words
-  // dashed words, second
-  re.push( /([A-z]+(\-[A-z]+)+)\b/g );  //console.log( m.match(re[0]) );
-  re.push( /(\d+\-\d+)\b/g );
-  re.push( /(\d+\s*\%)/g );
-  // proper nouns, first
-  re.push( /([A-Z]+\w*( +[A-Z]+\w*)*)\b/g );  //console.log( m.match(re[1]) );
+  //get dashed number range
+  //get percentage
+  re.push( /(\d+\-\d+)\b/g, /(\d+\s?\%)\b/g );
+  //get combination dashed words
+  //capture both uppercase abbrev and combination proper names
+  //  except won't likely separate consecutive uppercase vocabs
+  re.push( /(\w+(\-\w+)+)\b/g );
+  re.push( /([A-Z]+\w*( +[A-Z]+\w*)*)\b/g );
+  //get rest of integers
+  re.push( /(\d+)\b/g );
   re.forEach((item, i) => {
-    let lList = l.match(item);
-    if( lList !== null ){
-      wo = wo.concat(lList);
+    let csList = l.match(item);
+    if( csList !== null ){
+      wo = wo.concat(csList);
       l = cleanExclude(item,l);
     }
   });
-  let reV = /(\w+)\b/g;
-  let v = l.match(reV);
-  if( v !== null ){
-    wo = wo.concat(v);
-    l = cleanExclude(reV,l);
+  //get rest of whole words, turn all lowercase
+  let cisre = /(\w+)\b/g;
+  let cisList = l.match(cisre);
+  if(cisList !== null){
+    cisList.forEach((item, i) => {
+      if(item.match(/[A-Z]/)){console.log(item);}
+      cisList[i] = item.toLowerCase();
+    });
+    wo = wo.concat(cisList);
+    l = cleanExclude(cisre,l);
   }
   return {
     subline:l, //STR
@@ -135,34 +137,54 @@ const aggregateCombination = function(l){
 }
 const countItems = function(s){
   let d = s.dictKW; let hash = {};
-  // First, go through all the non-trivial vocabs for similar/typo words
+  let keys = Object.keys(d);
+  // First, go through all the non-trivial vocabs for conjugation patterns
+  //   e.g., plural (s/es), past (d/ed), comparative (r/er/or), OR capitalization
+  keys.forEach((n, i) => {
+    //gather all words regardless of grouping
+    let vDict = d[n];
+    let conj = ['s','es','d','ed','r','er','or']; let conjYN = [];
+    vDict.forEach((value, i) => {
+      conj.forEach((item, i) => {
+        conjYN.push( ((d[value+item]!==null) ? 1 : 0) );
+      });
+      conjYN.forEach((item, i) => {
+        if(item==1){
+          let Kj = value+conj[i]; console.log(d[n]);
+          d[n] = d[n].concat( d[Kj] );
+          d[Kj] = [];
+        }
+      });
+    });
+  });
+  // Second, go through all the non-trivial vocabs for similar/typo
+  //   except then,than; form,from; etc. will indicate not worth the time
   //   i.e., L(w1,w2)=1
-  var keys = Object.keys(d);
   keys.forEach((item, i) => {
     var value = d[item];
     var uniqueWords = Object.keys(value);
     uniqueWords.forEach((w1, i) => {
       uniqueWords.forEach((w2, i) => {
-        //let q = typo.levenshteinDistance(w1,w2);
+        let q = typo.levenshteinDistance(w1,w2);
       });
     });
-    //console.log(uniqueWords.sort());
+    console.log(uniqueWords.sort());
   });
   // Counts of similar/typo words combine, simplify the Dict
 
 
   // Rank by counts
-  keys.forEach((item, i) => {
-    var value = d[item];
-    var uniqueWords = Object.keys(value);
-    uniqueWords.forEach((w, i) => {
-    });
-  }
+  //keys.forEach((item, i) => {
+    //var value = d[item];
+    //var uniqueWords = Object.keys(value);
+    //uniqueWords.forEach((w, i) => {
+    //});
+  //}
   return hash;
 }
 
 var soundbites = new Keywords([0,1,2,3]);
-var typo = require('./levenshtein');
+var typo = require('./sequencing');
 var fs = require('fs');
 var raw = process.argv[2]; if(!raw){ raw = soundbites.rawJD;}
 

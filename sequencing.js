@@ -1,10 +1,10 @@
-/**
-   https://raw.githubusercontent.com/trekhleb/javascript-algorithms/master/src/algorithms/string/levenshtein-distance/levenshteinDistance.js
- * @param {string} a
- * @param {string} b
- * @return {number}
- */
 module.exports = {
+  /**
+     https://raw.githubusercontent.com/trekhleb/javascript-algorithms/master/src/algorithms/string/levenshtein-distance/levenshteinDistance.js
+   * @param {string} a
+   * @param {string} b
+   * @return {number}
+   */
   levenshteinDistance: function(a,b){
     // Create empty edit distance matrix for all possible modifications of
     // substrings of a to substrings of b.
@@ -36,5 +36,30 @@ module.exports = {
     }
 
     return distanceMatrix[b.length][a.length];
+  },
+  /**
+   * Pseudocode here: https://en.wikipedia.org/wiki/Longest_common_substring_problem#Pseudocode
+
+  */
+  commonSubstring: function (a,b){
+    let L = Array(b.length + 1).fill(0).map(() => Array(a.length + 1).fill(0));
+    let S = b.split(''); let T = a.split('');
+    let z = 0; let ret = [];
+
+    for (const i of Array(b.length+1).keys()) {
+      for (const j of Array(a.length+1).keys()) {
+        if( S[i] != T[j] ){ continue;}
+        // fix this line, need this line L[i][j] = ( i == 1 || j == 1 ) ? 1 : L[i − 1][j − 1] + 1;
+        // array.slice(n,m) selects from index n to index m, but exclude m
+        let slicing = [i - z + 1 , i + 1];
+        if( L[i][j] > z ){
+            z = L[i][j];
+            ret = []; ret.push( S.slice(slicing[0],slicing[1]) );
+        } else if( L[i][j] == z ) {
+            ret.push( S.slice(slicing[0],slicing[1]) );
+        }
+      }
+    }
+    return ret;
   }
 }
