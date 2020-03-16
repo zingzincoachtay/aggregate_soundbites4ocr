@@ -2,11 +2,12 @@ class Keywords {
   constructor(r){
     this.rawJobDesc = '../j01.raw';
     this.dictTrivial = './trivial.json';
-    this.dictKeyWord = {};
-    r.forEach((item, i) => {
-      this.dictKW[i] = {};
-    });
     // Probably unneeded, but clarifying
+    this.listAllKeyW = [];
+    this.dictsKeyW = [];//list of _current (typeof dict)
+    if( r===null ){  console.log("Error in Class. Specify the numerical range of columns or the list of column names."); exit;}
+    //if( r!==undefined ){  console.log("Error in new constructor. Specify the numerical range of columns or the list of column names."); exit;}
+    this._current = {}; this._r = r;
     this._buffer = ''; this._subbuffer = '';
   }
   // Static variables
@@ -23,16 +24,22 @@ class Keywords {
   set subbuffer(m){
     this._subbuffer = m;}
   get subbuffer(){  return this._subbuffer;}
-  set listKW(d){
-    this.listKeyWord = d;}
-  get listKW(){  return this.listKeyWord;}
-  set dictKW(d){
-    this.dictKeyWord = d;}
-  get dictKW(){  return this.dictKeyWord;}
+  set listKW(w){//w is passed as list
+    this.listAllKeyW = this.listAllKeyW.concat(w);}
+  get listKW(){  return this.listAllKeyW;}
+  set dictsKW(d){//list of 'dict's (i.e., _current)
+    this.dictsKeyW.push(d);}
+  get dictsKW(){  return this.dictsKeyW;}
+  get initCurrent(){
+    this._r.forEach((item, i) => {//_current is a dict of dict structure
+      this._current[item] = {};
+    });
+    return this._current;
+  }
 }
 const constructRegExp = function(w){
-  var rW = '';
-  var sep = ' '; var union = '';
+  let rW = '';
+  let sep = ' '; let union = '';
   w.forEach((item, i) => {
     rW += union+sep+item+'\\b|\\b'+item+sep;
     union = '|';
@@ -43,7 +50,7 @@ const constructRegExp = function(w){
 const defineRegExp = (r) => new RegExp(r,'gi');
 const cleanBuffer = function(s){
   var m = s.subbuffer; let re = [];
-  var d = JSON.parse( fs.readFileSync(s.dictTR) );
+  let d = JSON.parse( fs.readFileSync(s.dictTR) );
   re.push( / i\.?e\.?\b|\bi\.?e\.? | e\.?g\.?\b|\be\.?g\.? | etc\.?\b|\betc\.? | a\.?k\.?a\.?\b|\ba\.?k\.?a\.? /gi );
   re.push( /s['’] /gi , /['’](s|re|ll|ve) |n['’]t /gi );
   //re.push( /,|\.|;|[\(\{\[\)\}\]]|\– | \–|\/ | \/|\* /gi );
@@ -67,35 +74,34 @@ const cleanBuffer = function(s){
 }
 const cleanExclude = (re,t) => t.replace(re,' ');
 const aggregateBuffer = function(s){
-  var m = s.subbuffer; let current = {};
+  var m = s.subbuffer; let current = s.initCurrent;
   let lines = m.split(/\r?\n/); let k = ['!0',0];
   lines.forEach((line, i) => {
     let g = line.match(/^!(\d)/);
     if( g !== null ){
       k = g;
-      current = createDictPair(current,k[1],{});
+      if(k[1]==0){
+        s.dictsKW = current; //console.log(s.dictsKW);
+        current = s.initCurrent;
+      }
     } else {
       let digest = aggregateCombination(line);
       lines[i] = digest.subline;
-      let list = digest.phrases;
-      current[k[1]] = mapList(current[k[1]],list);
+      s.listKW = digest.phrases;
+      //in case the raw file isn't well structured
+      //say, Class declared for 0 through 4, and found '!5'
+      if(current[k[1]] === undefined){  current[k[1]] = {};}
+      current[k[1]] = mapList(current[k[1]],digest.phrases);
     }
   });
   //console.log( lines.join("\n") );
   return current;
 }
 //const createDictPair = (d,i,r) => (d[i] === undefined) ? append(d,i,r) : d;
-const createDictPair = function(d,i,init){
-  if(d[i] === undefined){
-    d[i] = init;
-  }
-  return d;
-};
 const mapList = function(d,l){
+  let w = [1];
   l.forEach((item, i) => {
-    d = createDictPair(d,item,[1]);
-    // Assured that d[item] exists
-    d[item] = d[item].concat([1]);
+    d[item] = (d[item] === undefined) ? w : d[item].concat(w);
   });
   return d;
 }
@@ -124,7 +130,7 @@ const aggregateCombination = function(l){
   let cisList = l.match(cisre);
   if(cisList !== null){
     cisList.forEach((item, i) => {
-      if(item.match(/[A-Z]/)){console.log(item);}
+      //if(item.match(/[A-Z]/)){console.log(item);}
       cisList[i] = item.toLowerCase();
     });
     wo = wo.concat(cisList);
@@ -194,8 +200,9 @@ fs.readFile(raw , function(err,buffer) {
   soundbites.buffer = buffer.toString();
   soundbites.subbuffer = cleanBuffer(soundbites);//uses subbuffer
   //console.log(soundbites.subbuffer);
-  soundbites.dictKW = aggregateBuffer(soundbites);//uses dictKW
-  console.log(soundbites.dictKW);
+  //soundbites.dictKW = aggregateBuffer(soundbites);//uses dictKW
+  aggregateBuffer(soundbites);
+  //console.log(soundbites.dictsKW);
   //countItems(soundbites);
 });
 
