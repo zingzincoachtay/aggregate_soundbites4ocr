@@ -15,11 +15,10 @@ my $found_keywords = {};
 open(FH, '<', $ARGV[0]) or die $!;
 while(my $line=<FH>){
   chomp $line;
-  if($line =~ /^"(.+)","(.+)","(.+)"$/){
+  if($line =~ /^"(.+)","(.+)","(.+)"$/){#could use awk externally instead
     $found_keywords = &count_keywords($found_keywords,$1,$2,$3);
   }
 }
 while(my ($key,$val) = each(%$found_keywords)){
   print "$key $val\n" if $val>10;
 }
-
