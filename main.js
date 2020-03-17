@@ -67,12 +67,12 @@ const cleanBuffer = function(s){
   re.push( constructRegExp(d.IndefiniteFrequency) );
 
   re.forEach((item, i) => {
-    m = cleanExclude(item,m);
+    m = cleanExcluded(item,m);
   });
   //console.log(m);
   return m;
 }
-const cleanExclude = (re,t) => t.replace(re,' ');
+const cleanExcluded = (re,t) => t.replace(re,' ');
 const aggregateBuffer = function(s){
   var m = s.subbuffer; let current = s.initCurrent;
   let lines = m.split(/\r?\n/); let k = ['!0',0];
@@ -107,7 +107,7 @@ const mapList = function(d,l){
 }
 const aggregateCombination = function(l){
   // Need case sensitivity here!!
-  let wo = []; let re = [];
+  let wo = [[],[]]; let re = [];
   //get dashed number range
   //get percentage
   re.push( /(\d+\-\d+)\b/g, /(\d+\s?\%)\b/g );
@@ -117,29 +117,33 @@ const aggregateCombination = function(l){
   re.push( /(\w+(\-\w+)+)\b/g );
   re.push( /([A-Z]+\w*( +[A-Z]+\w*)*)\b/g );
   //get rest of integers
-  re.push( /(\d+)\b/g );
+  re.push( /(\d+)\b/g , /(\w+)\b/g );
   re.forEach((item, i) => {
-    let csList = l.match(item);
-    if( csList !== null ){
-      wo = wo.concat(csList);
-      l = cleanExclude(item,l);
-    }
+    wo[0].push( l.match(item) );
+    l = cleanExcluded(item,l);
   });
   //get rest of whole words, turn all lowercase
-  let cisre = /(\w+)\b/g;
-  let cisList = l.match(cisre);
-  if(cisList !== null){
-    cisList.forEach((item, i) => {
-      //if(item.match(/[A-Z]/)){console.log(item);}
-      cisList[i] = item.toLowerCase();
-    });
-    wo = wo.concat(cisList);
-    l = cleanExclude(cisre,l);
-  }
+  wo[1].push( extractPhrases(wo[0].slice(0,-1),1) );
+  wo[1].push( extractPhrases(wo[0].slice( -1 ),0) );
   return {
     subline:l, //STR
-    phrases:wo //LIST
+    phrases:wo[1] //LIST
   };
+}
+const extractPhrases = function(r,cs){
+  let ar = [];
+  r.forEach((item, i) => {
+    if( item !== null ){
+      ar = (cs==1) ? ar.concat(item) : ar.concat( lowercasePhrases(item) );
+    }
+  });
+  return ar;
+}
+const lowercasePhrases = function(r){
+  r.forEach((item, i) => {
+    r[i] = item.toLowerCase();
+  });
+  return r;
 }
 const countItems = function(s){
   let d = s.dictKW; let hash = {};
@@ -202,7 +206,7 @@ fs.readFile(raw , function(err,buffer) {
   //console.log(soundbites.subbuffer);
   //soundbites.dictKW = aggregateBuffer(soundbites);//uses dictKW
   aggregateBuffer(soundbites);
-  //console.log(soundbites.dictsKW);
+  console.log(soundbites.dictsKW);
   //countItems(soundbites);
 });
 
