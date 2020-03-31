@@ -1,7 +1,8 @@
 {
    "Articles":["a","an","the"]
   ,"BasicResponse":["yes","no"]
-  ,"BeingVerbs":["be","being","been","am","is","are","was","were"]
+  ,"BeingVerbs":["be","being","been","am"
+    ,"is","isn't","are","aren't","was","wasn't","were","weren't"]
   ,"AuxiliaryVerbs":[
      "will","would","won't"
     ,"can","could","cannot","can't"
@@ -16,6 +17,8 @@
     ,"she","her","her","hers"
     ,"they","their","them","theirs"
     ,"it","its","it","its"
+    ,"this","these"
+    ,"that","those"
   ],"Conjunctions":[
      "for","nor","but","yet","so","after","as","as long as","as soon as"
     ,"as though","Before","Even if","If","If when","Inasmuch","Just as","Now"
