@@ -89,7 +89,6 @@ const start_group = function(m){//continue;
     ,"ismarker":marker
   };
 }
-//const createDictPair = (d,i,r) => (d[i] === undefined) ? append(d,i,r) : d;
 const mapList = function(d,k,l){
   let w = [1];
   //in case the raw file isn't well structured
@@ -160,8 +159,8 @@ const concatRelatives = function(){
         let alt = suggested.pairs[key];
         dd[key] = dd[key].concat(dd[alt]);
         delete dd[alt];
-        //console.log('2: key='+dd[key]);
-        //console.log('2: alt='+dd[alt]);
+        //console.log('2: key='+key+'; ar='+dd[key]);
+        //console.log('2: alt='+alt+'; ar='+dd[alt]);
       }
     }
   });
@@ -174,13 +173,12 @@ const suggestRelatives = function(d){
     let kinsman = areRelatives(d,key);
     if( kinsman.areRelatives ){
       kinsman.Kins.forEach((alt, i) => {
-        d2[key] = alt;
+        if( key.match(/[A-Z]/) !== null ){  console.log("Notice: make the decision. Pick the shortest phrase, maybe?");}
+        else{  d2[key] = alt;}
       });
     }
   }
-  return {
-    pairs:d2
-  };
+  return {pairs:d2};
 }
 const areRelatives = function(d,w){
   // 's' 'es' 'd' 'ed' 'r' 'er'
@@ -191,7 +189,7 @@ const areRelatives = function(d,w){
   ];
   let yes = false; let kins = [];
   suffices.forEach((suffix, i) => {
-    let alt = w+suffix;
+    let alt = w.toLowerCase()+suffix;
     if( d[alt] !== undefined ){
       yes = true;// console.log('0:'+w+' === '+alt); console.log('1:'+d[w]+' === '+d[alt]);
       kins.push(alt);
@@ -214,8 +212,8 @@ fs.readFile(raw, function(err,buffer) {
   soundbites.savedRaw = buffer.toString();
   cleanBuffer(soundbites);// console.log(soundbites.subbuffer);
   aggregateBuffer(soundbites);
-  concatRelatives(); console.log(soundbites.dictsKW);
-  //countItems(soundbites);
+  concatRelatives();//console.log(soundbites.dictsKW);
+  console.log( stat.thresholdEachItem(soundbites.dictsKW));
 });
 
 
