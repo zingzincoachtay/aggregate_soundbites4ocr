@@ -212,8 +212,17 @@ fs.readFile(raw, function(err,buffer) {
   soundbites.savedRaw = buffer.toString();
   cleanBuffer(soundbites);// console.log(soundbites.subbuffer);
   aggregateBuffer(soundbites);
-  concatRelatives();//console.log(soundbites.dictsKW);
-  console.log( stat.thresholdEachItem(soundbites.dictsKW));
+  concatRelatives();// console.log(soundbites.dictsKW);
+  for (let d in soundbites.dictsKW[0]) {
+    for (let k in soundbites.dictsKW[0][d]) {
+      //console.log(k+': '+soundbites.dictsKW[0][d][k].length);
+    }
+  }
+  let d = stat.thresholdEachItem(soundbites.dictsKW);
+  //console.log(d);
+  for (let k in d[0]) {
+    //console.log(d[0][k].mode);
+  }
 });
 
 
