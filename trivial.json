@@ -10,15 +10,17 @@
     ,"may","might"
     ,"do","don't","does","doesn't","did","didn't"
   ],"Pronouns":[
-     "I","my","me","mine"
-    ,"you","your","you","yours"
-    ,"we","our","us","ours"
-    ,"he","his","him","his"
-    ,"she","her","her","hers"
-    ,"they","their","them","theirs"
-    ,"it","its","it","its"
+     "I","my","me","mine","myself"
+    ,"you","your","you","yours","yourself"
+    ,"we","our","us","ours","ourselves"
+    ,"he","his","him","his","himself"
+    ,"she","her","her","hers","herself"
+    ,"they","their","them","theirs","themselves"
+    ,"it","its","it","its","itself"
     ,"this","these"
     ,"that","those"
+    ,"someone","anyone","everyone"
+    ,"somebody","anybody","everybody"
   ],"Conjunctions":[
      "for","nor","but","yet","so","after","as","as long as","as soon as"
     ,"as though","Before","Even if","If","If when","Inasmuch","Just as","Now"
@@ -29,7 +31,7 @@
     ,"hardly","Neither","No sooner","than","Not only","but also","After all"
     ,"as a result","Consequently","Finally","For example","Furthermore","Hence"
     ,"however","in addition","in fact","incidentally","indeed","instead","likewise"
-    ,"meanwhile"
+    ,"meanwhile","and","or"
   ],"Prepositions":[
      "about","below","excepting","off","toward","above","beneath","for","on"
     ,"under","across","besides?","from","onto","underneath","after","between"
@@ -47,7 +49,15 @@
     ,"whether","how"
   ],"IndefiniteFrequency":[
      "always","constantly","usually","normally","frequently","regularly"
-     ,"often","sometimes","occasionally","rarely","infrequently","seldom"
-     ,"hardly ever","never"
+    ,"often","sometimes","occasionally","rarely","infrequently","seldom"
+    ,"hardly ever","never"
+  ],"commonwords":[
+     "have","has","had","having"
+    ,"use","uses","used","using"
+    ,"make","makes","made","making"
+    ,"more","less"
+    ,"if","then"
+    ,"there","stuff","stuffs","thing","things"
+    ,"person","people","folk","folks"
   ]
 }

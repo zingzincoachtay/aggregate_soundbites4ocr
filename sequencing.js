@@ -63,3 +63,20 @@ module.exports = {
     return ret;
   }
 }
+
+// Go through all the non-trivial vocabs for similar/typo,
+//   i.e., L(w1,w2)=1
+//   exceptions, such as:
+//   then,than; form,from; etc. will indicate not worth the time
+const similarPhrases = (w,l) => {
+  keys.forEach((item, i) => {
+    var value = d[item];
+    var uniqueWords = Object.keys(value);
+    uniqueWords.forEach((w1, i) => {
+      uniqueWords.forEach((w2, i) => {
+        let q = typo.levenshteinDistance(w1,w2);
+      });
+    });
+    console.log(uniqueWords.sort());
+  });
+}

@@ -1,0 +1,145 @@
+module.exports = {
+  aggregateBuffer: function(saved){
+    // First, count/sum (list). Then, mean, median, mode (dict).
+    // Third, quartiles(3-threshold), skewness, outlier (dict).
+    //   i.e., pick an appropriate threshold estimate
+    saved.subbuffer = cleanBuffer(saved.subbuffer,saved.exclusions);
+    let current = saved.initCurrent;
+    let lines = saved.subbuffer.split(/\r?\n/);
+    lines.forEach((line, i) => {
+      let gg = start_section(line,saved);
+      if( gg.iszero ){
+        saved.dictsKW = current;
+        current = saved.initCurrent;
+        return;}
+      if( gg.ismarker ) return;
+      let digest = aggregateCombination(line,saved);
+      lines[i] = digest.subline;
+      //current[k[1]] = mapList(current[k[1]],digest.phrases);
+      current = mapList(current,saved.sectK,saved.listKW);
+    });
+    //?saved.dictsKW = current;
+    saved.subbufline = lines;
+    return concatRelatives(saved.dictsKW);
+  }
+  
+}
+
+const cleanBuffer = function(m,d){
+  let re = [];
+  re.push( / i\.?e\.?,?\b|\bi\.?e\.?,? | e\.?g\.?,?\b|\be\.?g\.?,? /gi );
+  re.push( / etc\.?\b|\betc\.? | a\.?k\.?a\.?\b|\ba\.?k\.?a\.? /gi );
+  re.push( /s['’] /gi , /['’](s|re|ll|ve) /gi );
+  // whole word exclusions
+  re.push( constructRegExp(d.Articles) );
+  re.push( constructRegExp(d.BasicResponse) );
+  re.push( constructRegExp(d.BeingVerbs) );
+  re.push( constructRegExp(d.AuxiliaryVerbs) );
+  re.push( constructRegExp(d.Pronouns) );
+  re.push( constructRegExp(d.Conjunctions) );
+  re.push( constructRegExp(d.Prepositions) );
+  re.push( constructRegExp(d.WsHs) );
+  re.push( constructRegExp(d.IndefiniteFrequency) );
+  re.push( constructRegExp(d.commonwords) );
+  for (let item of re) m = cleanExcluded(item,m);// console.log(m);
+  return m;
+}
+const constructRegExp = function(w){
+  let rW = []; let sep = ' ';// use 'forEach' or 'map' to combine two lines?
+  for (let item of w) rW.push(sep+item+'\\b|\\b'+item+sep);
+  return defineRegExp( {regex:rW.join('|'),cs:false} );
+}
+const defineRegExp = (d) => (d.cs) ? new RegExp(d.regex,'g') : new RegExp(d.regex,'gi');
+const cleanExcluded = (re,t) => t.replace(re,' ');
+const start_section = function(m,s){
+  let g = m.match(/^!(\d)/);//['!0','0']
+  if( g !== null ) s.sectK = g[1];
+  return {
+     "iszero":(g !== null && s.sectK == 0) ? true : false
+    ,"ismarker":(g !== null) ? true : false
+  };
+}
+const aggregateCombination = function(m,s){// Need case sensitivity here!!
+  let re = []; s.initKWlist = [];
+  //get dashed number range, then percentage
+  re.push( /(\d+\-\d+)\b/g, /(\d+\s?\%)\b/g );
+  //get combination dashed words
+  //capture both uppercase abbrev and combination proper names
+  //  except won't likely separate consecutive uppercase vocabs
+  re.push( /(\w+(\-\w+)+)\b/g );
+  re.push( /([A-Z]+\w*( +[A-Z]+\w*)*)\b/g );
+  //get rest of integers
+  re.push( /(\d+)\b/g , /(\w+)\b/g );
+  re.slice(0,-1).forEach((item, i) => {
+    s.listKW = extractPhrases( m.match(item) ,1);
+    // cleanExcluded on non-trivial phrases
+    //   i.e., capialized phrases are not captured twice
+    m = cleanExcluded(item,m);
+  });
+  //get rest of whole words, turn all lowercase
+  s.listKW = extractPhrases( m.match(re.pop()) ,0);
+  return {
+     subline:m //STR
+    //,phrases:
+  };
+}
+const extractPhrases = function(l,cs){
+  if( l === null ) return [];
+  if( cs == 1 ) return l;
+  return l.map(function(v) {
+    return v.toLowerCase();
+  });
+}
+const mapList = function(d,k,l){
+  let w = [1];
+  //in case the raw file isn't well structured
+  //say, Class declared for 0 through 4, and found '!5'
+  if( d[k] === undefined ) d[k] = {};
+  for (let item of l)  d[k][item] = (d[k][item] === undefined) ? w : d[k][item].concat(w);
+  return d;
+}
+
+const concatRelatives = function(d){
+  d.forEach((dict, k) => {
+    for (let sect in dict) {
+      let suggested = suggestRelatives(dict[sect]);
+      if( Object.keys(suggested).length==0 ) continue;
+      dict[sect] = joinRelatives(dict[sect],suggested.pairs);
+    }
+  });
+  return d;
+}
+const suggestRelatives = function(d){
+  let d2 = {};
+  for (let key in d) {
+    let kinsman = areRelatives(d,key);
+    if( kinsman.areRelatives ) d2[key] = kinsman.Kins;
+  }
+  return {pairs:d2};
+}
+const areRelatives = function(d,w){
+  if( w.match(/^[\d\.\,]+$/) !== null ) return {areRelatives:false,Kins:[]};
+  let wALT = ['s','es','d','ed','r','er'].map(v => w+v);
+  if( w.match(/e$/) === null ) wALT.push(w+'ing'); else wALT.push(w.slice(0,-1)+'ing');
+  if( w.match(/^[A-Z]/   ) === null ) wALT.push( w.charAt(0).toUpperCase()+w.slice(1) );// ...capitalized
+  if( w.match(/^[A-Z]+$/ ) === null ) wALT.push( w.toUpperCase() );
+  let yes = false; let kins = [];
+  for (let alt of wALT) {
+    if( d[alt] === undefined ) continue;
+    else yes = true;
+    kins.push(alt);
+  }
+  return {
+     areRelatives:yes
+    ,Kins:kins
+  }
+}
+const joinRelatives = (d,dAlt) => {
+  for (let key in dAlt) {
+    for (let kAlt of dAlt[key]){
+      d[key] = d[key].concat(d[kAlt]);
+      delete d[kAlt];
+    }
+  }
+  return d;
+}
