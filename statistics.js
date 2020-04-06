@@ -1,5 +1,5 @@
 module.exports = {
-  thresholdEachItem: function(d,save){
+  thresholdEachItem: function(d,saved){
     // First, count/sum (list). Then, mean, median, mode (dict).
     // Third, quartiles(3-threshold), skewness, outlier (dict).
     //   i.e., pick an appropriate threshold estimate
@@ -9,12 +9,12 @@ module.exports = {
         let cnt = [];// ..count number of occurrences of each keyword
         for (let key in item[sect]) cnt.push( item[sect][key].length );
         ret.count[sect] = cnt;
-        ret.inertia[sect] = inertiaEachCount(cnt);// console.log(ret.inertia[i][sect]);
-        ret.normality[sect] = normalityEachCount(ret.inertia[sect]);// console.log(ret.normality[i][sect]);
+        ret.inertia[sect] = inertiaEachCount(cnt);
+        ret.normality[sect] = normalityEachCount(cnt,ret.inertia[sect]);
       }
-      save.dictsStats = ret; console.log(ret);
+      saved.dictsStats = ret;// console.log(ret);
     });
-    return save.dictsStats;
+    return saved.dictsStats;
   }
 
 }
@@ -25,7 +25,7 @@ const inertiaEachCount = (l) => {
   let medianResults = medianRange( sortNum(l,{ascending:true}) );
   return {
      mean:avg(l)//scalar
-    ,median:avg(medianResults.range)//scalar
+    ,median:avg([medianResults.L,medianResults.U])//scalar
     ,mode:modeList( sortNum(l,{ascending:false}),{rank:1} )// ..list, may have multiple modes
     ,quartiles:quartileMarkers( sortNum(l,{ascending:true}) )// ..dict, each Qs and markers
   };
@@ -40,8 +40,8 @@ const medianRange = (r) => {
   if( r.length == 1 ) return {pos:[0,0],isrange:false,range:[r.pop(),r.pop()]};
   let c = Math.floor(r.length * 0.5);
   // https://stackoverflow.com/questions/1063007/how-to-sort-an-array-of-integers-correctly
-  return (r.length % 2) ? {pos:[c,c],isrange:false,range:[r[c],r[c]]} : {pos:[c-1,c+1],isrange:true,range:r.slice(c-1,c+1)};
-  // ..slice upperlimit is not inclusive
+  return (r.length % 2) ? {posL:c,posU:c,isrange:false,L:r[c],U:r[c]} : {posL:c-1,posU:c,isrange:true,L:r[c-1],U:r[c]};
+  // ..slice upperlimit is NOT inclusive
 }
 const modeList = (r,ofInterest) => {
   let ff = {};// frequency of frequency of occurrences
@@ -67,41 +67,56 @@ const quartileMarkers = (r) => {
   // only makes sense beyong the set of 4
   // Further: https://en.wikipedia.org/wiki/Quartile#Discrete_Distributions
   let bisect = medianRange( sortNum(r,{ascending:true}) );
-  let halves = twohalves(r, bisect.pos[0],bisect.pos[1] );
+  let halves = twohalves(r, bisect.posL,bisect.posU );
   let bisectHs = {
-     H1:medianRange( sortNum( halves[1],{ascending:true}) )
-    ,H2:medianRange( sortNum( halves[2],{ascending:true}) )
+     H1:medianRange( sortNum( halves.L,{ascending:true}) )
+    ,H2:medianRange( sortNum( halves.U,{ascending:true}) )
   };
-  let L = twohalves( r.slice(0,bisect.pos[0]), bisectHs.H1.pos[0],bisectHs.H1.pos[1]);
-  let U = twohalves( r.slice(  bisect.pos[1]), bisectHs.H2.pos[0],bisectHs.H2.pos[1]);
-  let Q = [[0],L[1],L[2],U[1],U[2]];// console.log(r,Q[1],Q[2],Q[3],Q[4]);
-  return {ranges:Q, markers:[bisect,bisectHs.H1,bisectHs.H2]};
+  let L = twohalves( halves.L, bisectHs.H1.posL,bisectHs.H1.posU);
+  let U = twohalves( halves.U, bisectHs.H2.posL,bisectHs.H2.posU);
+  return {
+     ranges:{
+      R1:L.L,R2:L.U,R3:U.L,R4:U.U
+    },indices:{
+      Q1:[bisectHs.H1.posL,bisectHs.H1.posU]
+     ,Q2:[bisect.posL,bisect.posU]
+     ,Q3:[bisectHs.H2.posL,bisectHs.H2.posU]
+    },markers:{
+      Q1:avg([bisectHs.H1.L,bisectHs.H1.U])
+     ,Q2:avg([bisect.L,bisect.U])
+     ,Q3:avg([bisectHs.H2.L,bisectHs.H2.U])
+    }
+  };//posL:,posU:,isrange:,L:,U:}
 }
 const twohalves = (l,midL,midU) => {
-  let h = [l];
-  h[1] = []; for (let h1=0; h1<=midL ;h1++) h[1].push( l[h1] );
-  h[2] = l.slice( midU );
+  let h = {};
+  h.L = []; for (let h1=0;h1<=midL;h1++) h.L.push( l[h1] );
+  h.U = l.slice( midU );
   return h;
 }
 // -- //
-const normalityEachCount = (d) => {
+const normalityEachCount = (l,d) => {
   // refer to the dict structure in function inertiaEachCount().
   let threeInertia = {mean:d.mean,median:d.median,mode:d.mode};
   let infoQuartiles = d.quartiles;
   return {
      skewness:skewedQ(infoQuartiles)// B<0, median>mean?
     ,outliers:outlierThreshold(  )//
+    ,momentum:sampleCentralMoment(l,threeInertia.mean)
   };
 }
 const skewedQ = (d) => {
   // Methods taken: https://en.wikipedia.org/wiki/Skewness#Other_measures_of_skewness
-  let fourQsAVG = {
-     Q2:d.markers[0]
-    ,Q1:d.markers[1]
-    ,Q3:d.markers[2]
+  let markers = {
+    Q2:d.markers[0],Q1:d.markers[1],Q3:d.markers[2]
   };
-  return (fourQsAVG.Q3+fourQsAVG.Q1-2*fourQsAVG.Q2)/(fourQsAVG.Q3-fourQsAVG.Q1);
+  return (markers.Q3+markers.Q1-2*markers.Q2)/(markers.Q3-markers.Q1);
 }
 const outlierThreshold = (d) => {
   return true;
+}
+const sampleCentralMoment = (l,mean) => {
+  let littleSigma2 = 0; for (let n of l) littleSigma2 += (n-mean)*(n-mean);
+  return littleSigma2/(l.length-1);
+  //return {samplevariance:littleSigma2/(l.length-1)};
 }

@@ -4,25 +4,37 @@ module.exports = {
     // Third, quartiles(3-threshold), skewness, outlier (dict).
     //   i.e., pick an appropriate threshold estimate
     saved.subbuffer = cleanBuffer(saved.subbuffer,saved.exclusions);
-    let current = saved.initCurrent;
+    let current = saved.initCurrent; let currD = [];
     let lines = saved.subbuffer.split(/\r?\n/);
     lines.forEach((line, i) => {
       let gg = start_section(line,saved);
       if( gg.iszero ){
         saved.dictsKW = current;
         current = saved.initCurrent;
-        return;}
+      }
       if( gg.ismarker ) return;
       let digest = aggregateCombination(line,saved);
       lines[i] = digest.subline;
-      //current[k[1]] = mapList(current[k[1]],digest.phrases);
-      current = mapList(current,saved.sectK,saved.listKW);
+      current = mapList(current,saved.sectK,digest.phrases);
     });
-    //?saved.dictsKW = current;
-    saved.subbufline = lines;
+    saved.dictsKW = current;
+    saved.subbuflines = lines;
     return concatRelatives(saved.dictsKW);
+  },
+  filterPhrases: function (dS,dT){// ...may be ineffective...
+    let filtered = {};
+    for (let sect in dS){
+      filtered[sect] = {};
+      for (let phrase in dS[sect]){
+        //if( dS[sect][phrase].length <= dT.inertia[sect].mean-2*Math.sqrt(dT.normality[sect].momentum) ) console.log(sect,phrase,dS[sect][phrase].length,dT.inertia[sect].mean,Math.sqrt(dT.normality[sect].momentum));
+        // By Quartiles, picking the Q1, Q2, and Q3
+        let upperQ = dT.inertia[sect].quartiles.markers.Q3;//...avg(r) ~ scalar
+        if( dS[sect][phrase].length <= upperQ ) filtered[sect][phrase] = dS[sect][phrase];
+      }
+    }
+    return filtered;
   }
-  
+
 }
 
 const cleanBuffer = function(m,d){
@@ -55,12 +67,14 @@ const start_section = function(m,s){
   let g = m.match(/^!(\d)/);//['!0','0']
   if( g !== null ) s.sectK = g[1];
   return {
-     "iszero":(g !== null && s.sectK == 0) ? true : false
-    ,"ismarker":(g !== null) ? true : false
+     iszero:(g !== null && s.sectK == 0) ? true : false
+    ,ismarker:(g !== null) ? true : false
+    ,ischanged:(g === null) ? false : true
   };
 }
-const aggregateCombination = function(m,s){// Need case sensitivity here!!
-  let re = []; s.initKWlist = [];
+const aggregateCombination = function(m,k){
+  // Need case sensitivity here!!
+  let re = []; let current = [];
   //get dashed number range, then percentage
   re.push( /(\d+\-\d+)\b/g, /(\d+\s?\%)\b/g );
   //get combination dashed words
@@ -71,16 +85,16 @@ const aggregateCombination = function(m,s){// Need case sensitivity here!!
   //get rest of integers
   re.push( /(\d+)\b/g , /(\w+)\b/g );
   re.slice(0,-1).forEach((item, i) => {
-    s.listKW = extractPhrases( m.match(item) ,1);
+    current = current.concat( extractPhrases( m.match(item) ,1) );
     // cleanExcluded on non-trivial phrases
     //   i.e., capialized phrases are not captured twice
     m = cleanExcluded(item,m);
   });
   //get rest of whole words, turn all lowercase
-  s.listKW = extractPhrases( m.match(re.pop()) ,0);
+  current = current.concat( extractPhrases( m.match(re.pop()) ,0) );
   return {
      subline:m //STR
-    //,phrases:
+    ,phrases:current
   };
 }
 const extractPhrases = function(l,cs){
@@ -118,11 +132,11 @@ const suggestRelatives = function(d){
   return {pairs:d2};
 }
 const areRelatives = function(d,w){
-  if( w.match(/^[\d\.\,]+$/) !== null ) return {areRelatives:false,Kins:[]};
+  if( w.match(/^[\d\.\,\-]+$/) !== null ) return {areRelatives:false,Kins:[]};
   let wALT = ['s','es','d','ed','r','er'].map(v => w+v);
   if( w.match(/e$/) === null ) wALT.push(w+'ing'); else wALT.push(w.slice(0,-1)+'ing');
   if( w.match(/^[A-Z]/   ) === null ) wALT.push( w.charAt(0).toUpperCase()+w.slice(1) );// ...capitalized
-  if( w.match(/^[A-Z]+$/ ) === null ) wALT.push( w.toUpperCase() );
+  if( w.match(/^[A-Z\d]+$/ ) === null ) wALT.push( w.toUpperCase() );
   let yes = false; let kins = [];
   for (let alt of wALT) {
     if( d[alt] === undefined ) continue;

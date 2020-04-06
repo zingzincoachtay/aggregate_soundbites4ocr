@@ -8,6 +8,7 @@
     ,"can","could","cannot","can't"
     ,"shall","should","shan't"
     ,"may","might"
+    ,"must","ought to","mustn't"
     ,"do","don't","does","doesn't","did","didn't"
   ],"Pronouns":[
      "I","my","me","mine","myself"
@@ -55,9 +56,11 @@
      "have","has","had","having"
     ,"use","uses","used","using"
     ,"make","makes","made","making"
+    ,"set" ,"sets"        ,"setting"
     ,"more","less"
     ,"if","then"
     ,"there","stuff","stuffs","thing","things"
-    ,"person","people","folk","folks"
+    ,"person","people","other","others","folk","folks","peep","peeps"
+    ,"very","all"
   ]
 }
