@@ -8,7 +8,7 @@ module.exports = {
     let lines = saved.subbuffer.split(/\r?\n/);
     lines.forEach((line, i) => {
       let gg = start_section(line,saved);
-      if( gg.iszero ){
+      if( gg.iszero && !isemptyD(current) ){
         saved.dictsKW = current;
         current = saved.initCurrent;
       }
@@ -26,9 +26,10 @@ module.exports = {
     for (let sect in dS){
       filtered[sect] = {};
       for (let phrase in dS[sect]){
+        let par = dT.inertia[sect];
         //if( dS[sect][phrase].length <= dT.inertia[sect].mean-2*Math.sqrt(dT.normality[sect].momentum) ) console.log(sect,phrase,dS[sect][phrase].length,dT.inertia[sect].mean,Math.sqrt(dT.normality[sect].momentum));
         // By Quartiles, picking the Q1, Q2, and Q3
-        let upperQ = dT.inertia[sect].quartiles.markers.Q3;//...avg(r) ~ scalar
+        let upperQ = par.quartiles.ranges.R4[par.quartiles.ranges.R4.length-1];//... ~ scalar
         if( dS[sect][phrase].length <= upperQ ) filtered[sect][phrase] = dS[sect][phrase];
       }
     }
@@ -64,13 +65,18 @@ const constructRegExp = function(w){
 const defineRegExp = (d) => (d.cs) ? new RegExp(d.regex,'g') : new RegExp(d.regex,'gi');
 const cleanExcluded = (re,t) => t.replace(re,' ');
 const start_section = function(m,s){
-  let g = m.match(/^!(\d)/);//['!0','0']
+  let g = m.match(/^!(\d+)/);//['!0','0']
   if( g !== null ) s.sectK = g[1];
   return {
      iszero:(g !== null && s.sectK == 0) ? true : false
     ,ismarker:(g !== null) ? true : false
     ,ischanged:(g === null) ? false : true
   };
+}
+const isemptyD = (d) => {
+  for (let sect in d)
+    if( Object.keys(d[sect]).length>0 ) return false;
+  return true;
 }
 const aggregateCombination = function(m,k){
   // Need case sensitivity here!!
@@ -81,6 +87,10 @@ const aggregateCombination = function(m,k){
   //capture both uppercase abbrev and combination proper names
   //  except won't likely separate consecutive uppercase vocabs
   re.push( /(\w+(\-\w+)+)\b/g );
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match
+  // "If the g flag is used, all results matching the complete regular expression will be returned, but capturing groups will not."
+  // Is the recurrence specification in curly brackets non-greedy in nodeJS?
+  re.push( /(\w\.){3,}\b|\b(\w\.){3,}/g );
   re.push( /([A-Z]+\w*( +[A-Z]+\w*)*)\b/g );
   //get rest of integers
   re.push( /(\d+)\b/g , /(\w+)\b/g );
@@ -135,8 +145,9 @@ const areRelatives = function(d,w){
   if( w.match(/^[\d\.\,\-]+$/) !== null ) return {areRelatives:false,Kins:[]};
   let wALT = ['s','es','d','ed','r','er'].map(v => w+v);
   if( w.match(/e$/) === null ) wALT.push(w+'ing'); else wALT.push(w.slice(0,-1)+'ing');
-  if( w.match(/^[A-Z]/   ) === null ) wALT.push( w.charAt(0).toUpperCase()+w.slice(1) );// ...capitalized
-  if( w.match(/^[A-Z\d]+$/ ) === null ) wALT.push( w.toUpperCase() );
+  if( w.match(/^[A-Z]/       ) === null ) wALT.push( w.charAt(0).toUpperCase()+w.slice(1) );// ...capitalized
+  if( w.match(/^[A-Z\d\W]+$/ ) === null ) wALT.push( w.toUpperCase() );
+  if( w.match(/^[A-Z](\W)([A-Z]\1)+$/) !== null ) wALT.push( w.replace(/\W/g,'') );
   let yes = false; let kins = [];
   for (let alt of wALT) {
     if( d[alt] === undefined ) continue;

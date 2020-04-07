@@ -1,6 +1,6 @@
 class Keywords {
   constructor(r){
-    this.rawJobDesc = '../j02.raw';
+    this.rawJobDesc = '../j01.raw';
     this.dictTrivial = './trivial.json';
     if( r===undefined ){  console.log("Error in new constructor. Specify the numerical range of columns or the list of column names."); exit;}
     this._buffer = ''; this._subbuf = ''; this._sublines = [];
@@ -9,7 +9,8 @@ class Keywords {
     // Probably unneeded, but clarifying
     this.listAllKeyW = [];//list of words/phrases
     this.dictsAllKeyW = [];//list of _current (typeof dict)
-    this.focusDictsAllKeyW = [];//list of _current (typeof dict)
+    this.focusDictsAllKeyW = [];//list
+    this.focusOneOnOne = {};//dict
   }
   // Static variables
   // Call for raw input path, not changing dynamically
@@ -33,8 +34,11 @@ class Keywords {
   get sectK(){  return this._sectNum;}
   set sectK(k){  this._sectNum = k;}
 
-  set focusKW(d){  this.focusDictsAllKeyW.push(d);}
   get focusKW(){  return this.focusDictsAllKeyW;}
+  get focusCompared(){  return this.focusOneOnOne;}
+  set focusKW(d){  this.focusDictsAllKeyW.push(d);}
+  set focusCompared(d){
+    this.focusOneOnOne.push(d);}
   get initCurrent(){//_current is a dict of dict structure
     this._current = {};
     for (let item of this._r) this._current[item] = {};
@@ -74,13 +78,43 @@ fs.readFile(raw, function(err,buffer) {//Asynchronous
   let thresholds = stat.thresholdEachItem(soundbites.dictsKW,quantified);// console.log(nontrivial);
   nontrivial.forEach((item, n) => {
     soundbites.focusKW = keyphrases.filterPhrases( nontrivial[n],thresholds[n] );
-  }); console.log(soundbites.focusKW);
+  });// console.log(soundbites.focusKW);
+  let focusOneOnOne = soundbites.initCurrent;
+  let total = (soundbites.focusKW.length)*(soundbites.focusKW.length-1)/2;
   soundbites.focusKW.forEach((item, i) => {
-
-  });
-
+    if( soundbites.focusKW[i+1]==undefined ) return;
+    //if( keyphrases.isemptyD(item) ) return;
+    let cmp = matchingFocusPhrases(focusOneOnOne,item,soundbites.focusKW.slice(i+1));
+    focusOneOnOne = cmp.inbinary;
+  }); console.log(focusOneOnOne,total);// common Keywords, theoretical max comparisons
+  for (let sect in focusOneOnOne)
+    for (let key in focusOneOnOne[sect])
+      if( focusOneOnOne[sect][key].length>0 ) console.log(sect,key);
 });
 
+const matchingFocusPhrases = (D,d,L) => {
+  return {
+    inbinary:compareBinaryRet(D,d,L)
+  }
+}
+const compareBinaryRet = (D,d,L) => {
+  for (let sect in d)
+    for (let item of L) D = cumulativeBinary(D,sect,d[sect],item[sect]);
+  return D;
+}
+const cumulativeBinary = (D,k,d1,d2) => {
+  if( D[k]===undefined ) D[k] = {};
+  // Cumulate only the matching occurrences;
+  // 1) avoid doubling 'true'
+  // 2) can't properly check back,
+  //    i.e., w E w1 can't be checked during w2 <=> [w3..wN] without 1)
+  // Just record common occurrences, account 'false' afterwards.
+  let Dk = D[k]; let w = [true];
+  for (let key1 in d1)
+    if( d2[key1]===undefined ) Dk[key1] = [];
+    else Dk[key1] = (Dk[key1]===undefined) ? w : Dk[key1].concat(w);
+  return D;
+}
 
 // To exclude: whole words
 //   articles: //   being verbs: //   auxiliary verbs: //   pronouns:

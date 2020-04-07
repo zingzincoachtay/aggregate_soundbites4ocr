@@ -76,7 +76,8 @@ const quartileMarkers = (r) => {
   let U = twohalves( halves.U, bisectHs.H2.posL,bisectHs.H2.posU);
   return {
      ranges:{
-      R1:L.L,R2:L.U,R3:U.L,R4:U.U
+       R1:L.L,R2:L.U
+      ,R3:U.L,R4:U.U
     },indices:{
       Q1:[bisectHs.H1.posL,bisectHs.H1.posU]
      ,Q2:[bisect.posL,bisect.posU]
