@@ -1,11 +1,12 @@
+var fs = require('fs');
 class Keywords {
   constructor(r){
-    this.rawJobDesc = '../j01.raw';
+    this.rawJobDesc = '../j02.raw';
     this.dictTrivial = './trivial.json';
     if( r===undefined ){  console.log("Error in new constructor. Specify the numerical range of columns or the list of column names."); exit;}
     this._buffer = ''; this._subbuf = ''; this._sublines = [];
-    this._r = r; this._exceptions = {};
-    this._current = {}; this._sectNum = 0;
+    this._r = r; this._sectNum = 0;
+    this._exceptions = JSON.parse( fs.readFileSync(this.dictTrivial) );
     // Probably unneeded, but clarifying
     this.listAllKeyW = [];//list of words/phrases
     this.dictsAllKeyW = [];//list of _current (typeof dict)
@@ -15,22 +16,20 @@ class Keywords {
   // Static variables
   // Call for raw input path, not changing dynamically
   get  rawJD(){ return this.rawJobDesc;}
-  // Call for trivial vocab list path, not changing dynamically
-  get dictTR(){ return this.dictTrivial;}
+  // Call for trivial vocab list, not changing dynamically
+  get exclusions(){  return this._exceptions;}
   // Dynamically changing
   // The original buffer here.
   set savedRaw(s){  this._buffer = s; this._subbuf = s;}
-  get subbuffer(){  return this._subbuf;}
-  get subbuflines(){  return this._sublines;}
-  get exclusions(){  return this._exceptions;}
-  set subbuffer(m){  this._subbuf = m;}
+  get   subbuffer( ){  return   this._subbuf;}
+  get subbuflines( ){  return this._sublines;}
+  set   subbuffer(m){    this._subbuf = m;}
   set subbuflines(l){  this._sublines = l;}
-  set exclusions(d){  this._exceptions = d;}
 
-  set initKWlist(w){  this.listAllKeyW = w;}
+  set  initKWlist(w){  this.listAllKeyW = w;}
   set initKWDicts(d){  this.dictsAllKeyW = d;}
   get dictsKW(){  return this.dictsAllKeyW;}
-  set dictsKW(d){  this.dictsAllKeyW.push(d);}//list of 'dict's (i.e., _current)®
+  set dictsKW(d){  this.dictsAllKeyW.push(d);}//list of 'dict's (i.e., _current)
   get sectK(){  return this._sectNum;}
   set sectK(k){  this._sectNum = k;}
 
@@ -40,9 +39,9 @@ class Keywords {
   set focusCompared(d){
     this.focusOneOnOne.push(d);}
   get initCurrent(){//_current is a dict of dict structure
-    this._current = {};
-    for (let item of this._r) this._current[item] = {};
-    return this._current;
+    let fresh = {};
+    for (let item of this._r) fresh[item] = {};
+    return fresh;
   }
 }
 class Quantifiable {
@@ -62,7 +61,6 @@ class Quantifiable {
 }
 
 
-var fs = require('fs');
 var keyphrases = require('./aggregated');
 var typo = require('./sequencing');
 var stat = require('./statistics');
@@ -72,7 +70,6 @@ const quantified = new Quantifiable();
 var raw = process.argv[2]; if(!raw) raw = soundbites.rawJD;
 fs.readFile(raw, function(err,buffer) {//Asynchronous
   if(err){ throw err; exit;}
-  soundbites.exclusions = JSON.parse( fs.readFileSync(soundbites.dictTR) );
   soundbites.savedRaw = buffer.toString();
   let nontrivial = keyphrases.aggregateBuffer(soundbites);// console.log(nontrivial);
   let thresholds = stat.thresholdEachItem(soundbites.dictsKW,quantified);// console.log(nontrivial);
@@ -89,8 +86,9 @@ fs.readFile(raw, function(err,buffer) {//Asynchronous
   });// console.log(focusOneOnOne,total);// common Keywords, theoretical max comparisons
   for (let sect in focusOneOnOne)
     for (let key in focusOneOnOne[sect])
-      if( focusOneOnOne[sect][key].length>0 ) console.log(sect,key);
+      if( focusOneOnOne[sect][key].length>0 ) console.log(sect+"\t"+key+"\t"+focusOneOnOne[sect][key].length);
 });
+// Use 'awk' to format, that's fine.
 
 const matchingFocusPhrases = (D,d,L) => {
   return {

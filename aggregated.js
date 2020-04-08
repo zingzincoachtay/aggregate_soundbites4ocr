@@ -160,11 +160,13 @@ const areRelatives = function(d,w){
   }
 }
 const joinRelatives = (d,dAlt) => {
+  let tobedeleted = {};
   for (let key in dAlt) {
-    for (let kAlt of dAlt[key]){
+    for (let kAlt of dAlt[key]){if( d[key]===undefined ) console.log('Fail point: '+key,kAlt);
       d[key] = d[key].concat(d[kAlt]);
-      delete d[kAlt];
+      tobedeleted[kAlt] = true;
     }
   }
+  for (let del of Object.keys(tobedeleted)) delete d[del];
   return d;
 }

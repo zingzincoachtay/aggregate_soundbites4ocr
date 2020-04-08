@@ -61,9 +61,21 @@ const modeList = (r,ofInterest) => {
   return rankOfInterest;
 }
 const quartileMarkers = (r) => {
-  if( r.length == 1 ) return true;// ..escape single-element list
-  if( r.length == 2 ) return true;// ..escape twin-element list
-  if( r.length == 3 ) return true;// ..escape triple-element list
+  if( r.length == 1 )// ..escape single-element list
+    return retQuartile({r:[[],[r[0]],[r[0]],[r[0]],[r[0]]]
+      ,i:[[],[0,0],[0,0],[0,0]]
+      ,m:[[], r[0], r[0], r[0]]
+    });
+  if( r.length == 2 )// ..escape twin-element list
+    return retQuartile({r:[[],[r[0]],[r[0]],[r[1]],[r[1]]]
+      ,i:[[],[0,0], [0,1],[1,1]]
+      ,m:[[], r[0],avg(r), r[1]]
+    });
+  if( r.length == 3 )// ..escape triple-element list
+    return retQuartile({r:[[],[r[0]],[r[0],r[1]],[r[1],r[2]],[r[2]]]
+      ,i:[[],[0,1],[1,1],[1,2]]
+      ,m:[[],avg([r[0],r[1]]),r[1],avg([r[1],r[2]])]
+    });
   // only makes sense beyong the set of 4
   // Further: https://en.wikipedia.org/wiki/Quartile#Discrete_Distributions
   let bisect = medianRange( sortNum(r,{ascending:true}) );
@@ -74,21 +86,22 @@ const quartileMarkers = (r) => {
   };
   let L = twohalves( halves.L, bisectHs.H1.posL,bisectHs.H1.posU);
   let U = twohalves( halves.U, bisectHs.H2.posL,bisectHs.H2.posU);
-  return {
-     ranges:{
-       R1:L.L,R2:L.U
-      ,R3:U.L,R4:U.U
-    },indices:{
-      Q1:[bisectHs.H1.posL,bisectHs.H1.posU]
-     ,Q2:[bisect.posL,bisect.posU]
-     ,Q3:[bisectHs.H2.posL,bisectHs.H2.posU]
-    },markers:{
-      Q1:avg([bisectHs.H1.L,bisectHs.H1.U])
-     ,Q2:avg([bisect.L,bisect.U])
-     ,Q3:avg([bisectHs.H2.L,bisectHs.H2.U])
-    }
-  };//posL:,posU:,isrange:,L:,U:}
+  return retQuartile({
+     r:[[], L.L ,L.U ,U.L ,U.U ]//list of lists
+    ,i:[[],[bisectHs.H1.posL,bisectHs.H1.posU]//list of lists
+        ,[     bisect.posL,     bisect.posU]
+        ,[bisectHs.H2.posL,bisectHs.H2.posU]
+    ],m:[[],avg([bisectHs.H1.L,bisectHs.H1.U])//list of scalars
+         ,avg([     bisect.L,     bisect.U])
+         ,avg([bisectHs.H2.L,bisectHs.H2.U])
+    ]
+  });//posL:,posU:,isrange:,L:,U:
 }
+const retQuartile = (d) => ({
+    ranges:{ R1:d.r[1],R2:d.r[2],R3:d.r[3],R4:d.r[4] }
+  ,indices:{ Q1:d.i[1],Q2:d.i[2],Q3:d.i[3] }
+  ,markers:{ Q1:d.m[1],Q2:d.m[2],Q3:d.m[3] }
+});
 const twohalves = (l,midL,midU) => {
   let h = {};
   h.L = []; for (let h1=0;h1<=midL;h1++) h.L.push( l[h1] );
@@ -102,7 +115,7 @@ const normalityEachCount = (l,d) => {
   let infoQuartiles = d.quartiles;
   return {
      skewness:skewedQ(infoQuartiles)// B<0, median>mean?
-    ,outliers:outlierThreshold(  )//
+    ,outliers:outlierThreshold(    )//
     ,momentum:sampleCentralMoment(l,threeInertia.mean)
   };
 }
