@@ -108,10 +108,7 @@ const normalityEachCount = (l,d) => {
 }
 const skewedQ = (d) => {
   // Methods taken: https://en.wikipedia.org/wiki/Skewness#Other_measures_of_skewness
-  let markers = {
-    Q2:d.markers[0],Q1:d.markers[1],Q3:d.markers[2]
-  };
-  return (markers.Q3+markers.Q1-2*markers.Q2)/(markers.Q3-markers.Q1);
+  return (d.markers.Q3+d.markers.Q1-2*d.markers.Q2)/(d.markers.Q3-d.markers.Q1);
 }
 const outlierThreshold = (d) => {
   return true;

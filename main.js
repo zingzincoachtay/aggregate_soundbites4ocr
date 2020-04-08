@@ -4,7 +4,7 @@ class Keywords {
     this.dictTrivial = './trivial.json';
     if( r===undefined ){  console.log("Error in new constructor. Specify the numerical range of columns or the list of column names."); exit;}
     this._buffer = ''; this._subbuf = ''; this._sublines = [];
-    this._r = r; this._exeptions = {};
+    this._r = r; this._exceptions = {};
     this._current = {}; this._sectNum = 0;
     // Probably unneeded, but clarifying
     this.listAllKeyW = [];//list of words/phrases
@@ -22,10 +22,10 @@ class Keywords {
   set savedRaw(s){  this._buffer = s; this._subbuf = s;}
   get subbuffer(){  return this._subbuf;}
   get subbuflines(){  return this._sublines;}
-  get exclusions(){  return this._exeptions;}
+  get exclusions(){  return this._exceptions;}
   set subbuffer(m){  this._subbuf = m;}
   set subbuflines(l){  this._sublines = l;}
-  set exclusions(d){  this._exeptions = d;}
+  set exclusions(d){  this._exceptions = d;}
 
   set initKWlist(w){  this.listAllKeyW = w;}
   set initKWDicts(d){  this.dictsAllKeyW = d;}
@@ -86,7 +86,7 @@ fs.readFile(raw, function(err,buffer) {//Asynchronous
     //if( keyphrases.isemptyD(item) ) return;
     let cmp = matchingFocusPhrases(focusOneOnOne,item,soundbites.focusKW.slice(i+1));
     focusOneOnOne = cmp.inbinary;
-  }); console.log(focusOneOnOne,total);// common Keywords, theoretical max comparisons
+  });// console.log(focusOneOnOne,total);// common Keywords, theoretical max comparisons
   for (let sect in focusOneOnOne)
     for (let key in focusOneOnOne[sect])
       if( focusOneOnOne[sect][key].length>0 ) console.log(sect,key);
