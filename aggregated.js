@@ -4,7 +4,7 @@ module.exports = {
     // Third, quartiles(3-threshold), skewness, outlier (dict).
     //   i.e., pick an appropriate threshold estimate
     saved.subbuffer = cleanBuffer(saved.subbuffer,saved.exclusions);
-    let current = saved.initCurrent; let currD = [];
+    let current = saved.initCurrent;
     let lines = saved.subbuffer.split(/\r?\n/);
     lines.forEach((line, i) => {
       let gg = start_section(line,saved);
@@ -44,17 +44,10 @@ const cleanBuffer = function(m,d){
   re.push( / etc\.?\b|\betc\.? | a\.?k\.?a\.?\b|\ba\.?k\.?a\.? /gi );
   re.push( /s['’] /gi , /['’](s|re|ll|ve) /gi );
   // whole word exclusions
-  re.push( constructRegExp(d.Articles) );
-  re.push( constructRegExp(d.BasicResponse) );
-  re.push( constructRegExp(d.BeingVerbs) );
-  re.push( constructRegExp(d.AuxiliaryVerbs) );
-  re.push( constructRegExp(d.Pronouns) );
-  re.push( constructRegExp(d.Conjunctions) );
-  re.push( constructRegExp(d.Prepositions) );
-  re.push( constructRegExp(d.WsHs) );
-  re.push( constructRegExp(d.IndefiniteFrequency) );
-  re.push( constructRegExp(d.commonwords) );
-  for (let item of re) m = cleanExcluded(item,m);// console.log(m);
+  Object.keys(d).forEach((type, i) => {
+    let item = constructRegExp(d[type]);
+    m = cleanExcluded(item,m);
+  });
   return m;
 }
 const constructRegExp = function(w){

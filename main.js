@@ -1,7 +1,7 @@
 var fs = require('fs');
 class Keywords {
   constructor(r){
-    this.rawJobDesc = '../j02.raw';
+    this.rawJobDesc = '../j04.raw';
     this.dictTrivial = './trivial.json';
     if( r===undefined ){  console.log("Error in new constructor. Specify the numerical range of columns or the list of column names."); exit;}
     this._buffer = ''; this._subbuf = ''; this._sublines = [];
@@ -86,7 +86,7 @@ fs.readFile(raw, function(err,buffer) {//Asynchronous
   });// console.log(focusOneOnOne,total);// common Keywords, theoretical max comparisons
   for (let sect in focusOneOnOne)
     for (let key in focusOneOnOne[sect])
-      if( focusOneOnOne[sect][key].length>0 ) console.log(sect+"\t"+key+"\t"+focusOneOnOne[sect][key].length);
+      if( focusOneOnOne[sect][key].length>1 ) console.log(sect+"\t"+key+"\t"+focusOneOnOne[sect][key].length);
 });
 // Use 'awk' to format, that's fine.
 
